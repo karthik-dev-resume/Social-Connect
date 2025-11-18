@@ -1,0 +1,57 @@
+import { NextRequest } from 'next/server'
+import { verifyAccessToken, extractTokenFromHeader, type TokenPayload } from '@/lib/auth'
+
+export interface AuthenticatedRequest extends NextRequest {
+  user?: TokenPayload
+}
+
+export async function authenticateRequest(request: NextRequest): Promise<TokenPayload | null> {
+  const authHeader = request.headers.get('authorization')
+  const token = extractTokenFromHeader(authHeader)
+
+  if (!token) {
+    return null
+  }
+
+  try {
+    const payload = verifyAccessToken(token)
+    return payload
+  } catch (error) {
+    return null
+  }
+}
+
+export function requireAuth(handler: (req: AuthenticatedRequest, context: any) => Promise<Response>) {
+  return async (req: NextRequest, context: any) => {
+    const user = await authenticateRequest(req)
+    
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const authenticatedReq = req as AuthenticatedRequest
+    authenticatedReq.user = user
+    
+    return handler(authenticatedReq, context)
+  }
+}
+
+export function requireAdmin(handler: (req: AuthenticatedRequest, context: any) => Promise<Response>) {
+  return async (req: NextRequest, context: any) => {
+    const user = await authenticateRequest(req)
+    
+    if (!user) {
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    if (user.role !== 'admin') {
+      return Response.json({ error: 'Forbidden' }, { status: 403 })
+    }
+
+    const authenticatedReq = req as AuthenticatedRequest
+    authenticatedReq.user = user
+    
+    return handler(authenticatedReq, context)
+  }
+}
+
