@@ -13,6 +13,7 @@ import { apiRequest } from '@/lib/api/client'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import type { Post, Comment } from '@/lib/db/types'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function PostDetailPage() {
   const params = useParams()
@@ -81,7 +82,7 @@ export default function PostDetailPage() {
         <Navbar />
         <div className="max-w-3xl mx-auto px-4 py-8">
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading post...</p>
+            <Spinner size="lg" />
           </div>
         </div>
       </div>

@@ -8,6 +8,7 @@ import { PostCard } from "@/components/post-card";
 import { apiRequest } from "@/lib/api/client";
 import type { Post } from "@/lib/db/types";
 import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function FeedPage() {
   const { user, loading: authLoading } = useAuth();
@@ -39,7 +40,7 @@ export default function FeedPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Loading...</h1>
+          <Spinner size="lg" />
         </div>
       </div>
     );
@@ -56,7 +57,7 @@ export default function FeedPage() {
         <CreatePost onPostCreated={fetchPosts} />
         {loading ? (
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading posts...</p>
+            <Spinner size="lg" />
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-8">

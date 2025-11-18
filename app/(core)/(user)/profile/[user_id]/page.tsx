@@ -12,6 +12,7 @@ import { apiRequest } from '@/lib/api/client'
 import { toast } from 'sonner'
 import type { User, Post, UserStats } from '@/lib/db/types'
 import { UserPlus, UserMinus } from 'lucide-react'
+import { Spinner } from '@/components/ui/spinner'
 
 type UserWithStats = User & UserStats
 
@@ -86,7 +87,7 @@ export default function ProfilePage() {
         <Navbar />
         <div className="max-w-4xl mx-auto px-4 py-8">
           <div className="text-center py-8">
-            <p className="text-gray-500">Loading profile...</p>
+            <Spinner size="lg" />
           </div>
         </div>
       </div>
