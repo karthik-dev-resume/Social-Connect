@@ -13,24 +13,24 @@ import type { Post } from '@/lib/db/types'
 import { useAuth } from '@/lib/hooks/use-auth'
 
 interface PostCardProps {
-  post: Post & { is_liked?: boolean }
+  post: Post & { is_liked?: boolean; author?: { id: string; first_name: string; last_name: string; username: string; avatar_url?: string } }
   onUpdate?: () => void
 }
 
 export function PostCard({ post, onUpdate }: PostCardProps) {
   // Initialize isLiked from post.is_liked if available
-  const [isLiked, setIsLiked] = useState((post as any).is_liked || false)
+  const [isLiked, setIsLiked] = useState(post.is_liked || false)
   const [likeCount, setLikeCount] = useState(post.like_count)
   const [loading, setLoading] = useState(false)
   const { user } = useAuth()
 
   // Update isLiked when post prop changes
   useEffect(() => {
-    setIsLiked((post as any).is_liked || false)
+    setIsLiked(post.is_liked || false)
     setLikeCount(post.like_count)
   }, [post])
 
-  const author = post.author || (post as any).author
+  const author = post.author
   const authorName = author ? `${author.first_name} ${author.last_name}` : 'Unknown'
   const authorUsername = author?.username || 'unknown'
   const initials = author ? `${author.first_name[0]}${author.last_name[0]}`.toUpperCase() : 'U'

@@ -42,8 +42,10 @@ export default function AdminPage() {
     try {
       const data = await apiRequest<Stats>("/api/admin/stats");
       setStats(data);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load stats");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load stats";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -53,8 +55,10 @@ export default function AdminPage() {
     try {
       const data = await apiRequest<{ results: User[] }>("/api/admin/users");
       setUsers(data.results);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load users");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load users";
+      toast.error(errorMessage);
     }
   };
 
@@ -62,8 +66,10 @@ export default function AdminPage() {
     try {
       const data = await apiRequest<{ results: Post[] }>("/api/admin/posts");
       setPosts(data.results);
-    } catch (error: any) {
-      toast.error(error.message || "Failed to load posts");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to load posts";
+      toast.error(errorMessage);
     }
   };
 
@@ -77,8 +83,10 @@ export default function AdminPage() {
       toast.success("User deactivated successfully");
       fetchUsers();
       fetchStats();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to deactivate user");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to deactivate user";
+      toast.error(errorMessage);
     }
   };
 
@@ -92,8 +100,10 @@ export default function AdminPage() {
       });
       toast.success("User promoted to admin successfully");
       fetchUsers();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to promote user");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to promote user";
+      toast.error(errorMessage);
     }
   };
 
@@ -105,8 +115,10 @@ export default function AdminPage() {
       toast.success("Post deleted successfully");
       fetchPosts();
       fetchStats();
-    } catch (error: any) {
-      toast.error(error.message || "Failed to delete post");
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to delete post";
+      toast.error(errorMessage);
     }
   };
 
