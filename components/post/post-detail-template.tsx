@@ -27,10 +27,8 @@ export function PostDetailTemplate() {
     return (
       <div className="min-h-screen bg-gray-50">
         <Navbar />
-        <div className="max-w-3xl mx-auto px-4 py-8">
-          <div className="text-center py-8">
-            <Spinner size="lg" />
-          </div>
+        <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
+          <Spinner size="lg" />
         </div>
       </div>
     );
@@ -67,4 +65,3 @@ export function PostDetailTemplate() {
     </div>
   );
 }
-

@@ -13,12 +13,20 @@ export interface Stats {
 
 export type ActiveTab = "stats" | "users" | "posts";
 
+export type ConfirmationAction = 
+  | { type: "deactivate"; userId: string; userName?: string }
+  | { type: "reactivate"; userId: string; userName?: string }
+  | { type: "promote"; userId: string; userName?: string }
+  | { type: "deletePost"; postId: string };
+
 export function useAdminDashboard() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ActiveTab>("stats");
+  const [confirmationAction, setConfirmationAction] = useState<ConfirmationAction | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -61,53 +69,67 @@ export function useAdminDashboard() {
     }
   };
 
-  const handleDeactivateUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to deactivate this user?")) return;
+  const handleDeactivateUser = (userId: string, userName?: string) => {
+    setConfirmationAction({ type: "deactivate", userId, userName });
+  };
 
+  const handleReactivateUser = (userId: string, userName?: string) => {
+    setConfirmationAction({ type: "reactivate", userId, userName });
+  };
+
+  const handlePromoteToAdmin = (userId: string, userName?: string) => {
+    setConfirmationAction({ type: "promote", userId, userName });
+  };
+
+  const handleDeletePost = (postId: string) => {
+    setConfirmationAction({ type: "deletePost", postId });
+  };
+
+  const executeAction = async () => {
+    if (!confirmationAction) return;
+
+    setActionLoading(true);
     try {
-      await apiRequest(`/api/admin/users/${userId}/deactivate`, {
-        method: "POST",
-      });
-      toast.success("User deactivated successfully");
-      fetchUsers();
-      fetchStats();
+      if (confirmationAction.type === "deactivate") {
+        await apiRequest(`/api/admin/users/${confirmationAction.userId}/deactivate`, {
+          method: "POST",
+        });
+        toast.success("User deactivated successfully");
+        fetchUsers();
+        fetchStats();
+      } else if (confirmationAction.type === "reactivate") {
+        await apiRequest(`/api/admin/users/${confirmationAction.userId}/reactivate`, {
+          method: "POST",
+        });
+        toast.success("User reactivated successfully");
+        fetchUsers();
+        fetchStats();
+      } else if (confirmationAction.type === "promote") {
+        await apiRequest(`/api/admin/users/${confirmationAction.userId}/promote`, {
+          method: "POST",
+        });
+        toast.success("User promoted to admin successfully");
+        fetchUsers();
+      } else if (confirmationAction.type === "deletePost") {
+        await apiRequest(`/api/admin/posts/${confirmationAction.postId}`, {
+          method: "DELETE",
+        });
+        toast.success("Post deleted successfully");
+        fetchPosts();
+        fetchStats();
+      }
+      setConfirmationAction(null);
     } catch (error: unknown) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to deactivate user";
+        error instanceof Error ? error.message : "Failed to perform action";
       toast.error(errorMessage);
+    } finally {
+      setActionLoading(false);
     }
   };
 
-  const handlePromoteToAdmin = async (userId: string) => {
-    if (!confirm("Are you sure you want to promote this user to admin?"))
-      return;
-
-    try {
-      await apiRequest(`/api/admin/users/${userId}/promote`, {
-        method: "POST",
-      });
-      toast.success("User promoted to admin successfully");
-      fetchUsers();
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to promote user";
-      toast.error(errorMessage);
-    }
-  };
-
-  const handleDeletePost = async (postId: string) => {
-    if (!confirm("Are you sure you want to delete this post?")) return;
-
-    try {
-      await apiRequest(`/api/admin/posts/${postId}`, { method: "DELETE" });
-      toast.success("Post deleted successfully");
-      fetchPosts();
-      fetchStats();
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete post";
-      toast.error(errorMessage);
-    }
+  const cancelAction = () => {
+    setConfirmationAction(null);
   };
 
   return {
@@ -118,8 +140,13 @@ export function useAdminDashboard() {
     activeTab,
     setActiveTab,
     handleDeactivateUser,
+    handleReactivateUser,
     handlePromoteToAdmin,
     handleDeletePost,
+    confirmationAction,
+    actionLoading,
+    executeAction,
+    cancelAction,
   };
 }
 

@@ -1,12 +1,17 @@
-import { NextRequest } from 'next/server'
 import { getUserById, getUserStats } from '@/lib/db/queries'
-import { requireAuth, type AuthenticatedRequest } from '@/lib/middleware/auth'
+import { requireAuth, type AuthenticatedRequest, type RouteContext } from '@/lib/middleware/auth'
 import type { User } from '@/lib/db/types'
 
-async function handler(req: AuthenticatedRequest, { params }: { params: Promise<{ user_id: string }> | { user_id: string } }) {
+async function handler(req: AuthenticatedRequest, context: RouteContext) {
   try {
-    // Handle both Promise and direct params (Next.js 15+ vs older versions)
-    const resolvedParams = params instanceof Promise ? await params : params
+    if (!context.params) {
+      return Response.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const resolvedParams = context.params instanceof Promise ? await context.params : context.params
     const userId = resolvedParams.user_id
 
     if (!userId) {

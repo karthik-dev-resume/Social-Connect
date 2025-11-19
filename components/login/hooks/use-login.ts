@@ -24,7 +24,7 @@ export function useLogin() {
     setSubmitting(true);
 
     try {
-      await login(emailOrUsername, password);
+      await login(emailOrUsername, password, 'user');
       toast.success("Logged in successfully!");
     } catch (error: unknown) {
       const errorMessage =
@@ -40,12 +40,8 @@ export function useLogin() {
     setSubmitting(true);
 
     try {
-      if (emailOrUsername === "karthik.admin" && password === "test@123") {
-        await login("karthik.admin", "test@123");
-        toast.success("Admin login successful!");
-      } else {
-        toast.error("Invalid admin credentials");
-      }
+      await login(emailOrUsername, password, 'admin');
+      toast.success("Admin login successful!");
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Failed to login";

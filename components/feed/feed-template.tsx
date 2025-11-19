@@ -8,7 +8,7 @@ import { PostCard } from "@/components/post-card";
 import { useFeed } from "./hooks/use-feed";
 import { Spinner } from "@/components/ui/spinner";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, UserStar } from "lucide-react";
 
 export function FeedTemplate() {
   const { user, loading: authLoading } = useAuth();
@@ -50,13 +50,12 @@ export function FeedTemplate() {
         {loading ? (
           <div className="flex flex-col items-center justify-center py-16">
             <Spinner size="lg" />
-            <p className="mt-4 text-muted-foreground">Loading posts</p>
           </div>
         ) : posts.length === 0 ? (
           <div className="text-center py-16 px-4">
             <div className="max-w-md mx-auto space-y-4">
               <div className="w-16 h-16 mx-auto bg-muted rounded-full flex items-center justify-center">
-                <Plus className="h-8 w-8 text-muted-foreground" />
+                <UserStar className="h-8 w-8 text-muted-foreground" />
               </div>
               <h3 className="text-xl font-semibold text-foreground">
                 No posts yet
@@ -64,15 +63,6 @@ export function FeedTemplate() {
               <p className="text-muted-foreground">
                 Be the first to share something with the community!
               </p>
-              <Button
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="mt-4"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Create Your First Post
-              </Button>
             </div>
           </div>
         ) : (
@@ -99,4 +89,3 @@ export function FeedTemplate() {
     </div>
   );
 }
-

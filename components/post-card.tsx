@@ -236,7 +236,7 @@ export function PostCard({ post, onUpdate }: PostCardProps) {
   };
 
   return (
-    <Card className=" bg-white transition-all duration-200 hover:shadow-lg border-2 hover:border-primary/20 gap-4 lg:gap-4 p-4 lg:p-6">
+    <Card className=" bg-white transition-all duration-200 hover:shadow-lg border-2 hover:border-primary/20 gap-4 lg:gap-4 p-4 lg:p-6 mb-6">
       <CardHeader className="p-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">

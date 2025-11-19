@@ -25,18 +25,18 @@ async function handler(req: AuthenticatedRequest, context: RouteContext) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Can't deactivate yourself
-    if (userId === req.user!.userId) {
+    // Check if user is already active
+    if (user.is_active) {
       return Response.json(
-        { error: "Cannot deactivate your own account" },
+        { error: "User is already active" },
         { status: 400 }
       );
     }
 
-    const updatedUser = await updateUser(userId, { is_active: false });
+    const updatedUser = await updateUser(userId, { is_active: true });
     if (!updatedUser) {
       return Response.json(
-        { error: "Failed to deactivate user" },
+        { error: "Failed to reactivate user" },
         { status: 500 }
       );
     }
@@ -46,13 +46,14 @@ async function handler(req: AuthenticatedRequest, context: RouteContext) {
     };
 
     return Response.json({
-      message: "User deactivated successfully",
+      message: "User reactivated successfully",
       user: userResponse,
     });
   } catch (error) {
-    console.error("Admin deactivate user error:", error);
+    console.error("Admin reactivate user error:", error);
     return Response.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
 export const POST = requireAdmin(handler);
+

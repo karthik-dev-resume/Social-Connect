@@ -71,7 +71,7 @@ function SelectTrigger({ children, className, disabled, ...props }: SelectTrigge
   )
 }
 
-interface SelectContentProps extends React.ComponentProps<typeof DropdownMenuPrimitive.Content> {
+interface SelectContentProps extends Omit<React.ComponentProps<typeof DropdownMenuPrimitive.Content>, 'onSelect'> {
   children: React.ReactNode
   onSelect?: (value: string) => void
 }
@@ -108,7 +108,7 @@ function SelectContent({
   )
 }
 
-interface SelectItemProps extends React.ComponentProps<typeof DropdownMenuPrimitive.Item> {
+interface SelectItemProps extends Omit<React.ComponentProps<typeof DropdownMenuPrimitive.Item>, 'onSelect'> {
   value: string
   children: React.ReactNode
   currentValue?: string

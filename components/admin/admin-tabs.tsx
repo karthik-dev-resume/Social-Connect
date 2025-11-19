@@ -11,29 +11,31 @@ interface AdminTabsProps {
 
 export function AdminTabs({ activeTab, onTabChange }: AdminTabsProps) {
   return (
-    <div className="flex space-x-2 mb-6">
+    <div className="flex flex-wrap gap-2 mb-6">
       <Button
         variant={activeTab === "stats" ? "default" : "outline"}
         onClick={() => onTabChange("stats")}
+        className="flex-1 sm:flex-initial justify-center sm:justify-start min-w-[120px]"
       >
-        <Activity className="mr-2 h-4 w-4" />
-        Statistics
+        <Activity className="mr-2 h-4 w-4 shrink-0" />
+        <span>Statistics</span>
       </Button>
       <Button
         variant={activeTab === "users" ? "default" : "outline"}
         onClick={() => onTabChange("users")}
+        className="flex-1 sm:flex-initial justify-center sm:justify-start min-w-[120px]"
       >
-        <Users className="mr-2 h-4 w-4" />
-        Users
+        <Users className="mr-2 h-4 w-4 shrink-0" />
+        <span>Users</span>
       </Button>
       <Button
         variant={activeTab === "posts" ? "default" : "outline"}
         onClick={() => onTabChange("posts")}
+        className="flex-1 sm:flex-initial justify-center sm:justify-start min-w-[120px]"
       >
-        <FileText className="mr-2 h-4 w-4" />
-        Posts
+        <FileText className="mr-2 h-4 w-4 shrink-0" />
+        <span>Posts</span>
       </Button>
     </div>
   );
 }
-

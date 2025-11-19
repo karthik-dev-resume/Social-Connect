@@ -29,23 +29,19 @@ export function Navbar() {
               SocialConnect
             </Link>
             <div className="hidden md:flex items-center space-x-4">
-              <Link href="/feed">
-                <Button variant="ghost" size="sm">
-                  <Home className="mr-2 h-4 w-4" />
-                  Feed
-                </Button>
-              </Link>
-              <Link href={`/profile/${user.id}`}>
-                <Button variant="ghost" size="sm">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </Button>
-              </Link>
-              {user.role === "admin" && (
-                <Link href="/admin-dashboard">
+              {user.role !== "admin" && (
+                <Link href="/feed">
                   <Button variant="ghost" size="sm">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
+                    <Home className="mr-2 h-4 w-4" />
+                    Feed
+                  </Button>
+                </Link>
+              )}
+              {user.role !== "admin" && (
+                <Link href={`/profile/${user.id}`}>
+                  <Button variant="ghost" size="sm">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
                   </Button>
                 </Link>
               )}

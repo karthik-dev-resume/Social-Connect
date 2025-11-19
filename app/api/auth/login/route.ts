@@ -8,6 +8,7 @@ import { z } from 'zod'
 const loginSchema = z.object({
   email_or_username: z.string().min(1),
   password: z.string().min(1),
+  login_type: z.enum(['user', 'admin']).optional(),
 })
 
 export async function POST(request: NextRequest) {
@@ -18,52 +19,63 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminClient()
     let user: User | null = null
     let isAdmin = false
+    const loginType = validated.login_type || 'admin' // Default to 'admin' for backward compatibility
 
-    // First, try to find in admins table
-    let admin = await getAdminByUsername(validated.email_or_username)
-    if (!admin) {
-      admin = await getAdminByEmail(validated.email_or_username)
+    // Only check admins table if login_type is 'admin'
+    if (loginType === 'admin') {
+      // First, try to find in admins table
+      let admin = await getAdminByUsername(validated.email_or_username)
+      if (!admin) {
+        admin = await getAdminByEmail(validated.email_or_username)
+      }
+
+      if (admin) {
+        console.log('Admin found:', admin.username)
+        // Check if admin is active
+        if (!admin.is_active) {
+          return Response.json(
+            { error: 'Account is deactivated' },
+            { status: 403 }
+          )
+        }
+
+        // Verify admin password
+        const isValidPassword = await comparePassword(validated.password, admin.password_hash)
+        if (!isValidPassword) {
+          return Response.json(
+            { error: 'Invalid credentials' },
+            { status: 401 }
+          )
+        }
+
+        // Update last login
+        await updateAdmin(admin.id, { last_login: new Date().toISOString() })
+
+        // Convert admin to user format for response
+        user = {
+          id: admin.id,
+          email: admin.email,
+          username: admin.username,
+          first_name: admin.first_name,
+          last_name: admin.last_name,
+          role: 'admin',
+          profile_visibility: admin.profile_visibility || 'public',
+          is_active: admin.is_active,
+          is_verified: true,
+          last_login: admin.last_login,
+          created_at: admin.created_at,
+          updated_at: admin.updated_at,
+          bio: admin.bio,
+          avatar_url: admin.avatar_url,
+          website: admin.website,
+          location: admin.location,
+        } as User
+        isAdmin = true
+      }
     }
 
-    if (admin) {
-      console.log('Admin found:', admin.username)
-      // Check if admin is active
-      if (!admin.is_active) {
-        return Response.json(
-          { error: 'Account is deactivated' },
-          { status: 403 }
-        )
-      }
-
-      // Verify admin password
-      const isValidPassword = await comparePassword(validated.password, admin.password_hash)
-      if (!isValidPassword) {
-        return Response.json(
-          { error: 'Invalid credentials' },
-          { status: 401 }
-        )
-      }
-
-      // Update last login
-      await updateAdmin(admin.id, { last_login: new Date().toISOString() })
-
-      // Convert admin to user format for response
-      user = {
-        id: admin.id,
-        email: admin.email,
-        username: admin.username,
-        first_name: admin.first_name,
-        last_name: admin.last_name,
-        role: 'admin',
-        profile_visibility: 'public',
-        is_active: admin.is_active,
-        is_verified: true,
-        last_login: admin.last_login,
-        created_at: admin.created_at,
-        updated_at: admin.updated_at,
-      } as User
-      isAdmin = true
-    } else {
+    // If not found in admin table (or login_type is 'user'), check users table
+    if (!user) {
       // Try to find in users table
       user = await getUserByEmail(validated.email_or_username)
       if (!user) {

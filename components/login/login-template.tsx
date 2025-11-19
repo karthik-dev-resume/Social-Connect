@@ -33,8 +33,12 @@ export function LoginTemplate() {
   } = useLogin();
 
   // Redirect if already logged in
+  // Note: This redirect is based on role, but actual login redirect is handled in use-auth.tsx
+  // based on login type selection
   useEffect(() => {
     if (!loading && user) {
+      // If user is on login page and already logged in, redirect based on role
+      // This handles cases where user navigates directly to /login while logged in
       if (user.role === "admin") {
         router.replace("/admin-dashboard");
       } else {

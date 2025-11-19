@@ -1,5 +1,4 @@
-import { NextRequest } from 'next/server'
-import { requireAuth, type AuthenticatedRequest } from '@/lib/middleware/auth'
+import { requireAuth, type AuthenticatedRequest, type RouteContext } from '@/lib/middleware/auth'
 import { createComment, getPostComments, getPostById } from '@/lib/db/queries'
 import { z } from 'zod'
 
@@ -9,10 +8,17 @@ const createCommentSchema = z.object({
 
 async function handler(
   req: AuthenticatedRequest,
-  { params }: { params: Promise<{ post_id: string }> | { post_id: string } }
+  context: RouteContext
 ) {
   try {
-    const resolvedParams = params instanceof Promise ? await params : params
+    if (!context.params) {
+      return Response.json(
+        { error: 'Post ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const resolvedParams = context.params instanceof Promise ? await context.params : context.params
     const postId = resolvedParams.post_id
 
     if (!postId) {
