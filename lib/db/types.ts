@@ -24,6 +24,11 @@ export interface Admin {
   first_name: string
   last_name: string
   password_hash: string
+  bio?: string
+  avatar_url?: string
+  website?: string
+  location?: string
+  profile_visibility?: 'public' | 'private' | 'followers_only'
   is_active: boolean
   last_login?: string
   created_at: string

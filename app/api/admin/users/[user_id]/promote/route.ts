@@ -1,11 +1,17 @@
-import { NextRequest } from 'next/server'
-import { requireAdmin, type AuthenticatedRequest } from '@/lib/middleware/auth'
+import { requireAdmin, type AuthenticatedRequest, type RouteContext } from '@/lib/middleware/auth'
 import { getUserById, updateUser } from '@/lib/db/queries'
 import type { User } from '@/lib/db/types'
 
-async function handler(req: AuthenticatedRequest, { params }: { params: Promise<{ user_id: string }> | { user_id: string } }) {
+async function handler(req: AuthenticatedRequest, context: RouteContext) {
   try {
-    const resolvedParams = params instanceof Promise ? await params : params
+    if (!context.params) {
+      return Response.json(
+        { error: 'User ID is required' },
+        { status: 400 }
+      )
+    }
+
+    const resolvedParams = context.params instanceof Promise ? await context.params : context.params
     const userId = resolvedParams.user_id
 
     if (!userId) {

@@ -16,7 +16,7 @@ function getSupabase() {
 // User Queries
 export async function getUserById(userId: string): Promise<User | null> {
   const supabase = getSupabase();
-  
+
   // First try users table
   const { data, error } = await supabase
     .from("users")
@@ -43,8 +43,8 @@ export async function getUserById(userId: string): Promise<User | null> {
       username: adminData.username,
       first_name: adminData.first_name,
       last_name: adminData.last_name,
-      role: 'admin',
-      profile_visibility: 'public',
+      role: "admin",
+      profile_visibility: "public",
       is_active: adminData.is_active,
       is_verified: true,
       last_login: adminData.last_login,
@@ -52,7 +52,7 @@ export async function getUserById(userId: string): Promise<User | null> {
       updated_at: adminData.updated_at,
     } as User;
   }
-  
+
   return data as User;
 }
 
@@ -123,6 +123,102 @@ export async function updateAdmin(
 
   if (error || !data) return null;
   return data as Admin;
+}
+
+/**
+ * Ensures an admin has a corresponding user record in the users table.
+ * This is needed because posts.author_id references users table.
+ * If the author_id is an admin that doesn't exist in users table, create a user record.
+ */
+export async function ensureUserRecordForAdmin(
+  authorId: string
+): Promise<void> {
+  const supabase = getSupabase();
+
+  // Check if user already exists in users table
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("id", authorId)
+    .single();
+
+  if (existingUser) {
+    // User already exists, no need to create
+    return;
+  }
+
+  // Check if it's an admin
+  const { data: admin } = await supabase
+    .from("admins")
+    .select("*")
+    .eq("id", authorId)
+    .single();
+
+  if (!admin) {
+    // Not an admin either, nothing to do
+    return;
+  }
+
+  // Create a corresponding user record for the admin
+  // Use a dummy password hash since admins use the admins table for auth
+  // The password_hash won't be used since they authenticate via admins table
+  const dummyPasswordHash = "$2a$10$dummy.hash.for.admin.user.record.creation";
+
+  // Sanitize username to comply with username_format constraint
+  // Replace any characters that aren't letters, numbers, or underscores with underscores
+  // The constraint requires: /^[a-zA-Z0-9_]+$/
+  const sanitizedUsername = admin.username.replace(/[^a-zA-Z0-9_]/g, "_");
+
+  // Check if sanitized username already exists (in case of conflicts)
+  const { data: existingUsername } = await supabase
+    .from("users")
+    .select("id")
+    .eq("username", sanitizedUsername)
+    .single();
+
+  let finalUsername = sanitizedUsername;
+  if (existingUsername && existingUsername.id !== admin.id) {
+    // If sanitized username is taken by another user, append admin ID suffix
+    finalUsername = `${sanitizedUsername}_${admin.id.slice(0, 8)}`;
+  }
+
+  const { error: insertError } = await supabase.from("users").insert({
+    id: admin.id,
+    email: admin.email,
+    username: finalUsername,
+    first_name: admin.first_name,
+    last_name: admin.last_name,
+    password_hash: dummyPasswordHash,
+    role: "admin",
+    profile_visibility: admin.profile_visibility || "public",
+    is_active: admin.is_active,
+    is_verified: true,
+    bio: admin.bio,
+    avatar_url: admin.avatar_url,
+    website: admin.website,
+    location: admin.location,
+    created_at: admin.created_at,
+    updated_at: admin.updated_at,
+  });
+
+  if (insertError) {
+    // If it's a unique constraint error, the user might have been created concurrently
+    // Check again if it exists now
+    const { data: checkUser } = await supabase
+      .from("users")
+      .select("id")
+      .eq("id", authorId)
+      .single();
+
+    if (!checkUser) {
+      // Still doesn't exist and we got an error, log it
+      console.error("Failed to create user record for admin:", insertError);
+      throw new Error(
+        `Failed to create user record for admin: ${insertError.message}`
+      );
+    }
+    // Otherwise, it was created concurrently, which is fine
+  }
 }
 
 export async function createUser(userData: {
@@ -228,6 +324,10 @@ export async function createPost(postData: {
   category?: "general" | "announcement" | "question";
 }): Promise<Post | null> {
   const supabase = getSupabase();
+
+  // Ensure admin has a corresponding user record if needed
+  await ensureUserRecordForAdmin(postData.author_id);
+
   const { data, error } = await supabase
     .from("posts")
     .insert({
@@ -240,7 +340,12 @@ export async function createPost(postData: {
     .select()
     .single();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    if (error) {
+      console.error("Error creating post:", error);
+    }
+    return null;
+  }
   return data as Post;
 }
 
@@ -339,6 +444,11 @@ export async function createFollow(
   followingId: string
 ): Promise<Follow | null> {
   const supabase = getSupabase();
+
+  // Ensure both users have corresponding user records if they are admins
+  await ensureUserRecordForAdmin(followerId);
+  await ensureUserRecordForAdmin(followingId);
+
   const { data, error } = await supabase
     .from("follows")
     .insert({
@@ -419,6 +529,10 @@ export async function createLike(
   userId: string
 ): Promise<Like | null> {
   const supabase = getSupabase();
+
+  // Ensure admin has a corresponding user record if needed
+  await ensureUserRecordForAdmin(userId);
+
   const { data, error } = await supabase
     .from("likes")
     .insert({
@@ -477,6 +591,10 @@ export async function createComment(commentData: {
   content: string;
 }): Promise<Comment | null> {
   const supabase = getSupabase();
+
+  // Ensure admin has a corresponding user record if needed
+  await ensureUserRecordForAdmin(commentData.user_id);
+
   const { data, error } = await supabase
     .from("comments")
     .insert(commentData)

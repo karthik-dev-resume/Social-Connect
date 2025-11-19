@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/hooks/use-auth'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function CoreLayout({
   children,
@@ -22,7 +23,7 @@ export default function CoreLayout({
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold">Loading...</h1>
+          <Spinner size="lg" />
         </div>
       </div>
     )

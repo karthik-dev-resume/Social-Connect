@@ -14,7 +14,11 @@ import type { User } from "@/lib/db/types";
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (emailOrUsername: string, password: string) => Promise<void>;
+  login: (
+    emailOrUsername: string,
+    password: string,
+    loginType?: "user" | "admin"
+  ) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => void;
   refreshUser: () => Promise<void>;
@@ -88,7 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const login = async (emailOrUsername: string, password: string) => {
+  const login = async (
+    emailOrUsername: string,
+    password: string,
+    loginType: "user" | "admin" = "admin"
+  ) => {
     const data = await apiRequest<{
       user: User;
       access_token: string;
@@ -98,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({
         email_or_username: emailOrUsername,
         password,
+        login_type: loginType,
       }),
     });
 
@@ -105,11 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("refresh_token", data.refresh_token);
     setUser(data.user);
 
-    // Redirect based on role
-    // Small delay ensures React state update and context propagation
+    // Redirect based on login type, not role
+    // If user chose "Login as User", go to feed regardless of role
+    // If user chose "Login as Admin", go to admin dashboard
     setTimeout(() => {
-      if (data.user.role === "admin") {
-        router.replace("/admin-dashboard");
+      if (loginType === "admin") {
+        router.replace("/feed");
       } else {
         router.replace("/feed");
       }
